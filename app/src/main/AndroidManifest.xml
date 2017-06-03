@@ -21,7 +21,7 @@
         </activity>
 
         <service
-            android:name=".service.MyService"
+            android:name=".service.MyService_"
             android:enabled="true"
             android:exported="true">
         </service>

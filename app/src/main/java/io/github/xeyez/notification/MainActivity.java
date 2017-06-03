@@ -31,18 +31,16 @@ public class MainActivity extends AppCompatActivity {
     void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_startService :
-                //startService(new Intent(this, MyService.class));
                 LocalTime startTime = getTimeFromTimePicker(timepicker_alarm1);
                 LocalTime endTime = getTimeFromTimePicker(timepicker_alarm2);
 
                 /*myPrefs.startMills().put(startTime.getMillisOfDay());
                 myPrefs.endMills().put(endTime.getMillisOfDay());*/
 
-                alaramBuilder.execute(startTime, endTime);
+                alaramBuilder.set(startTime, endTime);
                 break;
 
             case R.id.btn_cancelService :
-                //stopService(new Intent(this, MyService.class));
                 alaramBuilder.cancel();
                 break;
         }

@@ -12,7 +12,7 @@ import org.androidannotations.annotations.RootContext;
 import org.androidannotations.annotations.SystemService;
 import org.joda.time.LocalTime;
 
-import io.github.xeyez.notification.service.MyService;
+import io.github.xeyez.notification.service.MyService_;
 
 /**
  * Created by Administrator on 2017-06-02.
@@ -29,29 +29,26 @@ public class AlaramBuilder {
     @SystemService
     AlarmManager alarmManager;
 
-    public void execute(LocalTime startTime, LocalTime endTime) {
+    public void set(LocalTime startTime, LocalTime endTime) {
         LocalTime now = LocalTime.now();
         if(startTime.getMillisOfDay() > now.getMillisOfDay() || now.getMillisOfDay() > endTime.getMillisOfDay())
             return;
 
         int diff = endTime.getMillisOfDay() - startTime.getMillisOfDay();
-        Log.d("diff?", String.valueOf(diff));
+        Log.d(getClass().getSimpleName(), "diff? " + String.valueOf(diff));
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, REQUEST_CODE, new Intent(context, AlarmReceiver.class), 0);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), pendingIntent);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), pendingIntent);
-        } else {
+        else
             alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), pendingIntent);
-        }
-
-        //alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 0, pendingIntent);
     }
 
     public void cancel() {
         alarmManager.cancel(PendingIntent.getBroadcast(context, REQUEST_CODE, new Intent(context, AlarmReceiver.class), 0));
-        context.stopService(new Intent(context, MyService.class));
+        MyService_.intent(context).stop();
     }
 }
