@@ -26,12 +26,17 @@
             android:exported="true">
         </service>
 
-        <!--<receiver android:name=".AlarmReceiver">
+        <receiver android:name=".alarm.AlarmReceiver_">
+            <intent-filter>
+                <action android:name="broadcast.ALARM_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".alarm.BootReceiver_">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
-        </receiver>-->
-        <receiver android:name=".alarm.AlarmReceiver"/>
+        </receiver>
     </application>
 
 </manifest>

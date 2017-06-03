@@ -8,19 +8,29 @@ import android.os.IBinder;
 import android.util.Log;
 
 import org.androidannotations.annotations.Background;
+import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EService;
 import org.joda.time.LocalDateTime;
+import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.xeyez.notification.MainActivity_;
 import io.github.xeyez.notification.R;
+import io.github.xeyez.notification.persistence.PreferencesHelper;
 
 @EService
 public class MyService extends Service {
+
+    @Bean
+    PreferencesHelper preferencesHelper;
+
     private PendingIntent pendingIntent;
     private AtomicBoolean running;
+
+    private int startMills = 0;
+    private int endMills = 0;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -45,7 +55,10 @@ public class MyService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("start", "start");
+        Log.d(getClass().getSimpleName(), "start");
+
+        startMills = preferencesHelper.getInt("startMills");
+        endMills = preferencesHelper.getInt("endMills");
 
         workInBackground();
 
@@ -58,6 +71,14 @@ public class MyService extends Service {
             running.set(true);
 
             while(running.get()) {
+                int nowMills = LocalTime.now().getMillisOfDay();
+                if(startMills > nowMills || nowMills > endMills) {
+                    onDestroy();
+                    break;
+                }
+
+                Log.d("test", "test");
+
                 Notification notification = NotificationUtil.createNotification(getApplicationContext(), pendingIntent, "Clock", LocalDateTime.now().toString(DateTimeFormat.fullDateTime()), R.drawable.bell);
                 notification.flags |= Notification.FLAG_NO_CLEAR;
 

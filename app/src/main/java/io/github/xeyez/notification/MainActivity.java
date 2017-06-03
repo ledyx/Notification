@@ -2,30 +2,39 @@ package io.github.xeyez.notification;
 
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.TimePicker;
 
+import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
-import org.androidannotations.annotations.sharedpreferences.Pref;
 import org.joda.time.LocalTime;
 
-import io.github.xeyez.notification.alarm.AlaramBuilder;
-import io.github.xeyez.notification.persistence.MyPrefs_;
+import io.github.xeyez.notification.alarm.AlarmBuilder;
+import io.github.xeyez.notification.persistence.PreferencesHelper;
 
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity {
 
-    @Pref
-    MyPrefs_ myPrefs;
+    /*@Pref
+    MyPrefs_ myPrefs;*/
+
+    @Bean
+    PreferencesHelper preferencesHelper;
 
     @ViewById
     TimePicker timepicker_alarm1, timepicker_alarm2;
 
     @Bean
-    AlaramBuilder alaramBuilder;
+    AlarmBuilder alaramBuilder;
+
+    @AfterViews
+    void afterViews() {
+        Log.d(getClass().getSimpleName(), preferencesHelper.getInt("startMills") + " / " + preferencesHelper.getInt("endMills"));
+    }
 
     @Click({R.id.btn_startService, R.id.btn_cancelService})
     void onClick(View v) {
