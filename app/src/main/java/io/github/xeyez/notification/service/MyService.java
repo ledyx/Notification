@@ -68,8 +68,6 @@ public class MyService extends Service {
                 //notificationManager.notify(777, notification);
                 startForeground(777, notification);
 
-                Log.d(getClass().getSimpleName(), "wtf?");
-
                 Thread.sleep(1000);
             }
         } catch (Exception e) {

@@ -34,9 +34,6 @@ public class MainActivity extends AppCompatActivity {
                 LocalTime startTime = getTimeFromTimePicker(timepicker_alarm1);
                 LocalTime endTime = getTimeFromTimePicker(timepicker_alarm2);
 
-                /*myPrefs.startMills().put(startTime.getMillisOfDay());
-                myPrefs.endMills().put(endTime.getMillisOfDay());*/
-
                 alaramBuilder.set(startTime, endTime);
                 break;
 

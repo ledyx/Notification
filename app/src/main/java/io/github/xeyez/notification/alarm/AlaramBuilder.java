@@ -10,8 +10,10 @@ import android.util.Log;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
 import org.androidannotations.annotations.SystemService;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 import org.joda.time.LocalTime;
 
+import io.github.xeyez.notification.persistence.MyPrefs_;
 import io.github.xeyez.notification.service.MyService_;
 
 /**
@@ -22,6 +24,9 @@ import io.github.xeyez.notification.service.MyService_;
 public class AlaramBuilder {
 
     private static final int REQUEST_CODE = 111;
+
+    @Pref
+    MyPrefs_ myPrefs;
 
     @RootContext
     Context context;
@@ -34,8 +39,11 @@ public class AlaramBuilder {
         if(startTime.getMillisOfDay() > now.getMillisOfDay() || now.getMillisOfDay() > endTime.getMillisOfDay())
             return;
 
-        int diff = endTime.getMillisOfDay() - startTime.getMillisOfDay();
-        Log.d(getClass().getSimpleName(), "diff? " + String.valueOf(diff));
+        myPrefs.startMills().put(startTime.getMillisOfDay());
+        myPrefs.endMills().put(endTime.getMillisOfDay());
+
+        Log.d(getClass().getSimpleName(), myPrefs.startMills().get() + " / " + myPrefs.endMills().get());
+
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, REQUEST_CODE, new Intent(context, AlarmReceiver.class), 0);
 
