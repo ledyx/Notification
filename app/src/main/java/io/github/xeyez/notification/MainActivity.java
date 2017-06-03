@@ -11,12 +11,17 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 import org.joda.time.LocalTime;
 
 import io.github.xeyez.notification.alarm.AlaramBuilder;
+import io.github.xeyez.notification.persistence.MyPrefs_;
 
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity {
+
+    @Pref
+    MyPrefs_ myPrefs;
 
     @ViewById
     TimePicker timepicker_alarm1, timepicker_alarm2;
@@ -34,7 +39,13 @@ public class MainActivity extends AppCompatActivity {
         switch (v.getId()) {
             case R.id.btn_startService :
                 //startService(new Intent(this, MyService.class));
-                alaramBuilder.execute(getTimeFromTimePicker(timepicker_alarm1), getTimeFromTimePicker(timepicker_alarm2));
+                LocalTime startTime = getTimeFromTimePicker(timepicker_alarm1);
+                LocalTime endTime = getTimeFromTimePicker(timepicker_alarm2);
+
+                /*myPrefs.startMills().put(startTime.getMillisOfDay());
+                myPrefs.endMills().put(endTime.getMillisOfDay());*/
+
+                alaramBuilder.execute(startTime, endTime);
                 break;
 
             case R.id.btn_cancelService :

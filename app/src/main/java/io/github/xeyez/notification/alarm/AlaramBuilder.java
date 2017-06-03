@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
 
 import io.github.xeyez.notification.service.MyService;
@@ -26,19 +25,8 @@ public class AlaramBuilder {
     private AlarmManager alarmManager;
 
     public void execute(LocalTime startTime, LocalTime endTime) {
-        DateTime now = DateTime.now();
-        int nowHour = now.getHourOfDay();
-        int nowMinute = now.getMinuteOfHour();
-
-        boolean isAvailableHour = startTime.getHourOfDay() <= nowHour && nowHour <= endTime.getHourOfDay();
-        boolean isAvailableMinute = startTime.getMinuteOfHour() <= nowMinute && nowMinute <= endTime.getMinuteOfHour();
-
-        Log.d("wtf?", isAvailableHour + " / " + isAvailableMinute);
-
-        if(!isAvailableHour)
-            return;
-
-        if(!isAvailableMinute)
+        LocalTime now = LocalTime.now();
+        if(startTime.getMillisOfDay() > now.getMillisOfDay() || now.getMillisOfDay() > endTime.getMillisOfDay())
             return;
 
         int diff = endTime.getMillisOfDay() - startTime.getMillisOfDay();

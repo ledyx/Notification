@@ -1,13 +1,12 @@
 package io.github.xeyez.notification.service;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.util.Log;
 
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -17,7 +16,7 @@ import io.github.xeyez.notification.R;
 
 public class MyService extends Service implements ServiceTask.OnServiceTaskListener {
 
-    private NotificationManager notificationManager;
+    //private NotificationManager notificationManager;
     private PendingIntent pendingIntent;
     private ServiceTask serviceTask;
 
@@ -28,12 +27,14 @@ public class MyService extends Service implements ServiceTask.OnServiceTaskListe
 
     @Override
     public void onCreate() {
-        notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        //notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         super.onCreate();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("start", "start");
+
         if(pendingIntent == null) {
             Intent notificationIntent = new Intent(MyService.this, MainActivity_.class);
             notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -50,14 +51,17 @@ public class MyService extends Service implements ServiceTask.OnServiceTaskListe
     public void onDestroy() {
         super.onDestroy();
 
+        Log.d("destroy", "destroy");
+
         if(serviceTask != null) {
             serviceTask.cancel(true);
             serviceTask = null;
         }
 
-        if(notificationManager != null) {
+        /*if(notificationManager != null) {
             notificationManager.cancelAll();
-        }
+        }*/
+        stopForeground(true);
     }
 
     @Override
@@ -69,7 +73,8 @@ public class MyService extends Service implements ServiceTask.OnServiceTaskListe
             notification.defaults = Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE;
         }*/
 
-        notificationManager.notify(777, notification);
+        //notificationManager.notify(777, notification);
+        startForeground(777, notification);
     }
 
     @Override
