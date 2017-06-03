@@ -7,22 +7,27 @@ import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
+import org.androidannotations.annotations.EBean;
+import org.androidannotations.annotations.RootContext;
+import org.androidannotations.annotations.SystemService;
 import org.joda.time.LocalTime;
 
 import io.github.xeyez.notification.service.MyService;
-import lombok.AllArgsConstructor;
 
 /**
  * Created by Administrator on 2017-06-02.
  */
 
-@AllArgsConstructor
+@EBean
 public class AlaramBuilder {
 
     private static final int REQUEST_CODE = 111;
 
-    private Context context;
-    private AlarmManager alarmManager;
+    @RootContext
+    Context context;
+
+    @SystemService
+    AlarmManager alarmManager;
 
     public void execute(LocalTime startTime, LocalTime endTime) {
         LocalTime now = LocalTime.now();

@@ -1,13 +1,11 @@
 package io.github.xeyez.notification;
 
-import android.app.AlarmManager;
-import android.content.Context;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TimePicker;
 
-import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
@@ -26,13 +24,8 @@ public class MainActivity extends AppCompatActivity {
     @ViewById
     TimePicker timepicker_alarm1, timepicker_alarm2;
 
-    private AlaramBuilder alaramBuilder;
-
-    @AfterViews
-    void afterViews() {
-        //timepicker_alarm.setOnTimeChangedListener((view, hourOfDay, minute) -> Toast.makeText(this, hourOfDay + " / " + minute, Toast.LENGTH_SHORT).show());
-        alaramBuilder = new AlaramBuilder(this, (AlarmManager) getSystemService(Context.ALARM_SERVICE));
-    }
+    @Bean
+    AlaramBuilder alaramBuilder;
 
     @Click({R.id.btn_startService, R.id.btn_cancelService})
     void onClick(View v) {
