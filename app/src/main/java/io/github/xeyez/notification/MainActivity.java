@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onProgressService(int nowMillis) throws RemoteException {
-            Log.d("onProgressService11", String.valueOf(nowMillis));
+            Log.d("onProgressService", String.valueOf(nowMillis));
 
             try {
                 LocalDateTime now = LocalDateTime.now().withMillisOfDay(nowMillis);
@@ -174,7 +174,6 @@ public class MainActivity extends AppCompatActivity {
 
         unbindService(serviceConnection);
     }
-
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
