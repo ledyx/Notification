@@ -5,6 +5,8 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.os.RemoteCallbackList;
+import android.os.RemoteException;
 import android.util.Log;
 
 import org.androidannotations.annotations.Background;
@@ -32,16 +34,58 @@ public class MyService extends Service {
     private int startMills = 0;
     private int endMills = 0;
 
+    final RemoteCallbackList<IRemoteServiceCallback> callbackList = new RemoteCallbackList<>();
+
+    private final IRemoteService.Stub mBinder = new IRemoteService.Stub() {
+        @Override
+        public boolean registerCallback(IRemoteServiceCallback callback) throws RemoteException {
+            if(callback == null)
+                return false;
+
+            Log.d(getClass().getSimpleName(), "registerCallback!");
+
+            callbackList.register(callback);
+
+            return true;
+        }
+
+        @Override
+        public boolean unregisterCallback(IRemoteServiceCallback callback) throws RemoteException {
+            if(callback == null)
+                return false;
+
+            Log.d(getClass().getSimpleName(), "unregisterCallback!");
+
+            callbackList.unregister(callback);
+
+            return true;
+        }
+    };
+
+
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+
+        Log.d(getClass().getSimpleName(), "bind!");
+
+        return mBinder;
+    }
+
+    @Override
+    public void onRebind(Intent intent) {
+        super.onRebind(intent);
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        return true;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        Log.d(getClass().getSimpleName(), "onCreate");
+        //Log.d(getClass().getSimpleName(), "onCreate");
 
         if(pendingIntent == null) {
             Intent notificationIntent = new Intent(MyService.this, MainActivity_.class);
@@ -63,12 +107,15 @@ public class MyService extends Service {
         workInBackground();
 
         return START_STICKY;
+        //return START_REDELIVER_INTENT;
     }
 
     @Background
     void workInBackground() {
         try {
             running.set(true);
+
+            int callbacksCount = callbackList.beginBroadcast();
 
             while(running.get()) {
                 int nowMills = LocalTime.now().getMillisOfDay();
@@ -77,9 +124,11 @@ public class MyService extends Service {
                     break;
                 }
 
-                Log.d("test", "test");
+                //Log.d("test", "test");
 
-                Notification notification = NotificationUtil.createNotification(getApplicationContext(), pendingIntent, "Clock", LocalDateTime.now().toString(DateTimeFormat.fullDateTime()), R.drawable.bell);
+                LocalDateTime now = LocalDateTime.now();
+
+                Notification notification = NotificationUtil.createNotification(getApplicationContext(), pendingIntent, "Clock", now.toString(DateTimeFormat.fullDateTime()), R.drawable.bell);
                 notification.flags |= Notification.FLAG_NO_CLEAR;
 
                 /*if(new Random().nextInt(4) == 1) {
@@ -88,6 +137,18 @@ public class MyService extends Service {
 
                 //notificationManager.notify(777, notification);
                 startForeground(777, notification);
+
+
+
+
+                for(int i=0 ; i<callbacksCount ; i++) {
+                    try {
+                        callbackList.getBroadcastItem(i).onProgressService(now.getMillisOfDay());
+                    } catch (Exception e) {
+                    }
+                }
+
+
 
                 Thread.sleep(1000);
             }
@@ -104,5 +165,7 @@ public class MyService extends Service {
 
         running.set(false);
         stopForeground(true);
+
+        callbackList.finishBroadcast();
     }
 }
