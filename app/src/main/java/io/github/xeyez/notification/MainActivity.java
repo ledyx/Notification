@@ -169,6 +169,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+        Log.wtf("isMyServiceRunning", isMyServiceRunning(MyService_.class) + "");
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
 
