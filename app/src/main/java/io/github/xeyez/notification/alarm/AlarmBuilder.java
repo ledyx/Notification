@@ -63,8 +63,30 @@ public class AlarmBuilder {
             alarmManager.set(AlarmManager.RTC_WAKEUP, millis, pendingIntent);
     }
 
+    public void setForReboot() {
+        int startMillisOfDay = preferencesHelper.getInt("startMills");
+        if(startMillisOfDay <= 0)
+            return;
+
+        Log.d(getClass().getSimpleName(), "setForReboot");
+
+        long millis = DateTime.now().withMillisOfDay(startMillisOfDay).getMillis();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, millis, pendingIntent);
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, millis, pendingIntent);
+        else
+            alarmManager.set(AlarmManager.RTC_WAKEUP, millis, pendingIntent);
+    }
+
     public void cancel() {
         alarmManager.cancel(pendingIntent);
         MyService_.intent(context).stop();
+    }
+
+    public boolean isPassedTime() {
+        int endMillisOfDay = preferencesHelper.getInt("endMills");
+        return endMillisOfDay <= 0 || LocalTime.now().getMillisOfDay() > endMillisOfDay;
     }
 }

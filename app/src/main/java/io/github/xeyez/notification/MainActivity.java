@@ -57,8 +57,14 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
             setTimeToTimePicker(timepicker_alarm2, preferencesHelper.getInt("endMills"));
             setViewsEnabled(true);
         }
-        else
-            setViewsEnabled(false);
+        else {
+            if(preferencesHelper.getBoolean("isSetAlarm") && !alaramBuilder.isPassedTime())
+                setViewsEnabled(true);
+            else {
+                setViewsEnabled(false);
+                preferencesHelper.putBoolean("isSetAlarm", false);
+            }
+        }
     }
 
     @Click({R.id.btn_startService, R.id.btn_cancelService})
