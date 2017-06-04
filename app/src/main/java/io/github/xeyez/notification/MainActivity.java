@@ -50,9 +50,7 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
 
     @AfterViews
     void afterViews() {
-        //Log.d(getClass().getSimpleName(), preferencesHelper.getInt("startMills") + " / " + preferencesHelper.getInt("endMills"));
-
-        if(isMyServiceRunning(MyService_.class)) {
+        if(isMyServiceRunning(MyService_.class) || preferencesHelper.getBoolean("isSetAlarm")) {
             Log.d(getClass().getSimpleName(), preferencesHelper.getInt("startMills") + " / " + preferencesHelper.getInt("endMills"));
 
             setTimeToTimePicker(timepicker_alarm1, preferencesHelper.getInt("startMills"));
@@ -84,8 +82,7 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
                 alaramBuilder.cancel();
 
                 setViewsEnabled(false);
-
-                tv_time.setText("time");
+                preferencesHelper.putBoolean("isSetAlarm", false);
                 break;
         }
     }
@@ -157,5 +154,6 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
     @Override
     public void onStopMyService() {
         new Handler(Looper.getMainLooper()).post(() -> setViewsEnabled(false));
+        preferencesHelper.putBoolean("isSetAlarm", false);
     }
 }

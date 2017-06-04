@@ -47,6 +47,7 @@ public class AlarmBuilder {
         if(endTime.getMillisOfDay() - startTime.getMillisOfDay() <= 0)
             return;
 
+        preferencesHelper.putBoolean("isSetAlarm", true);
         preferencesHelper.putInt("startMills", startTime.getMillisOfDay());
         preferencesHelper.putInt("endMills", endTime.getMillisOfDay());
 

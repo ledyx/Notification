@@ -10,7 +10,7 @@ import org.androidannotations.annotations.EReceiver;
 import org.joda.time.LocalTime;
 
 import io.github.xeyez.notification.persistence.PreferencesHelper;
-import io.github.xeyez.notification.service.MyService;
+import io.github.xeyez.notification.service.MyService_;
 
 /**
  * Created by Administrator on 2017-06-02.
@@ -38,6 +38,7 @@ public class BootReceiver extends BroadcastReceiver {
 
         Log.d(getClass().getSimpleName(), "This is now!");
 
-        context.startService(new Intent(context, MyService.class));
+        //context.startService(new Intent(context, MyService.class));
+        MyService_.intent(context).start();
     }
 }
