@@ -5,8 +5,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.os.RemoteCallbackList;
-import android.os.RemoteException;
 import android.util.Log;
 
 import org.androidannotations.annotations.Background;
@@ -16,6 +14,7 @@ import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.xeyez.notification.MainActivity_;
@@ -24,6 +23,32 @@ import io.github.xeyez.notification.persistence.PreferencesHelper;
 
 @EService
 public class MyService extends Service {
+
+    public interface OnMyServiceListener {
+        void onProgressMyService(int millisOfDay);
+        void onStopMyService();
+    }
+
+    private static ConcurrentHashMap<String, OnMyServiceListener> observers = new ConcurrentHashMap<>();
+
+    public static void registerListener(Class clazz, OnMyServiceListener onMyServiceListener) {
+        /*if(observers.containsKey(clazz.getName()))
+            return;*/
+
+        observers.put(clazz.getName(), onMyServiceListener);
+    }
+
+    public static void unregisterListener(Class clazz) {
+        if(!observers.containsKey(clazz.getName()))
+            return;
+
+        observers.remove(clazz.getName());
+    }
+
+    public static boolean isRegisteredListener(Class clazz) {
+        return observers.containsKey(clazz.getName());
+    }
+
 
     @Bean
     PreferencesHelper preferencesHelper;
@@ -34,51 +59,9 @@ public class MyService extends Service {
     private int startMills = 0;
     private int endMills = 0;
 
-    final RemoteCallbackList<IRemoteServiceCallback> callbackList = new RemoteCallbackList<>();
-
-    private final IRemoteService.Stub mBinder = new IRemoteService.Stub() {
-        @Override
-        public boolean registerCallback(IRemoteServiceCallback callback) throws RemoteException {
-            if(callback == null)
-                return false;
-
-            Log.d(getClass().getSimpleName(), "registerCallback!");
-
-            callbackList.register(callback);
-
-            return true;
-        }
-
-        @Override
-        public boolean unregisterCallback(IRemoteServiceCallback callback) throws RemoteException {
-            if(callback == null)
-                return false;
-
-            Log.d(getClass().getSimpleName(), "unregisterCallback!");
-
-            callbackList.unregister(callback);
-
-            return true;
-        }
-    };
-
-
     @Override
     public IBinder onBind(Intent intent) {
-
-        Log.d(getClass().getSimpleName(), "bind!");
-
-        return mBinder;
-    }
-
-    @Override
-    public void onRebind(Intent intent) {
-        super.onRebind(intent);
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        return true;
+        return null;
     }
 
     @Override
@@ -115,8 +98,6 @@ public class MyService extends Service {
         try {
             running.set(true);
 
-            int callbacksCount = callbackList.beginBroadcast();
-
             while(running.get()) {
                 int nowMills = LocalTime.now().getMillisOfDay();
                 if(startMills > nowMills || nowMills > endMills) {
@@ -141,12 +122,7 @@ public class MyService extends Service {
 
 
 
-                for(int i=0 ; i<callbacksCount ; i++) {
-                    try {
-                        callbackList.getBroadcastItem(i).onProgressService(now.getMillisOfDay());
-                    } catch (Exception e) {
-                    }
-                }
+                observers.values().forEach(onMyServiceListener -> onMyServiceListener.onProgressMyService(now.getMillisOfDay()));
 
 
 
@@ -166,6 +142,6 @@ public class MyService extends Service {
         running.set(false);
         stopForeground(true);
 
-        callbackList.finishBroadcast();
+        observers.values().forEach(OnMyServiceListener::onStopMyService);
     }
 }

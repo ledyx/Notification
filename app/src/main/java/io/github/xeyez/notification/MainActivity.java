@@ -1,15 +1,10 @@
 package io.github.xeyez.notification;
 
 import android.app.ActivityManager;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
-import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -23,18 +18,17 @@ import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
-import org.joda.time.LocalDateTime;
+import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
 
 import io.github.xeyez.notification.alarm.AlarmBuilder;
 import io.github.xeyez.notification.persistence.PreferencesHelper;
-import io.github.xeyez.notification.service.IRemoteService;
-import io.github.xeyez.notification.service.IRemoteServiceCallback;
+import io.github.xeyez.notification.service.MyService;
 import io.github.xeyez.notification.service.MyService_;
 
 @EActivity(R.layout.activity_main)
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MyService.OnMyServiceListener {
 
     @ViewById
     Button btn_startService;
@@ -54,63 +48,9 @@ public class MainActivity extends AppCompatActivity {
     @Bean
     AlarmBuilder alaramBuilder;
 
-    IRemoteService remoteService;
-
-    IRemoteServiceCallback.Stub callback = new IRemoteServiceCallback.Stub() {
-
-        @Override
-        public void onProgressService(int nowMillis) throws RemoteException {
-            Log.d("onProgressService", String.valueOf(nowMillis));
-
-            try {
-                LocalDateTime now = LocalDateTime.now().withMillisOfDay(nowMillis);
-
-                new Handler(Looper.getMainLooper()).post(() -> tv_time.setText(now.toString(DateTimeFormat.fullDateTime())));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onStopService() throws RemoteException {
-            setViewsEnabled(false);
-        }
-    };
-
-    ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            if(service == null)
-                return;
-
-            Log.d(getClass().getSimpleName(), "onServiceConnected!");
-
-            remoteService = IRemoteService.Stub.asInterface(service);
-            try {
-                remoteService.registerCallback(callback);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            if(remoteService == null)
-                return;
-
-            Log.d(getClass().getSimpleName(), "onServiceDisconnected!");
-
-            try {
-                remoteService.unregisterCallback(callback);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
     @AfterViews
     void afterViews() {
-        Log.d(getClass().getSimpleName(), preferencesHelper.getInt("startMills") + " / " + preferencesHelper.getInt("endMills"));
+        //Log.d(getClass().getSimpleName(), preferencesHelper.getInt("startMills") + " / " + preferencesHelper.getInt("endMills"));
         setViewsEnabled(false);
     }
 
@@ -129,8 +69,6 @@ public class MainActivity extends AppCompatActivity {
                 alaramBuilder.set(startTime, endTime);
 
                 setViewsEnabled(true);
-
-                bindService(new Intent(this, MyService_.class), serviceConnection, BIND_AUTO_CREATE);
                 break;
 
             case R.id.btn_cancelService :
@@ -139,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
                 setViewsEnabled(false);
 
                 tv_time.setText("time");
-                unbindService(serviceConnection);
                 break;
         }
     }
@@ -160,6 +97,21 @@ public class MainActivity extends AppCompatActivity {
         return new LocalTime(hour, minute);
     }
 
+    private void setTimeToTimePicker(TimePicker timePicker, int millis) {
+
+        LocalTime localTime = LocalTime.now().withMillisOfDay(millis);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            timePicker.setHour(localTime.getHourOfDay());
+            timePicker.setMinute(localTime.getMinuteOfHour());
+        }
+        else {
+            timePicker.setCurrentHour(localTime.getHourOfDay());
+            timePicker.setCurrentMinute(localTime.getMinuteOfHour());
+        }
+    }
+
+
     private void setViewsEnabled(boolean isStart) {
         btn_startService.setEnabled(!isStart);
         btn_cancelService.setEnabled(isStart);
@@ -172,14 +124,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        Log.wtf("isMyServiceRunning", isMyServiceRunning(MyService_.class) + "");
+        MyService.registerListener(getClass(), this);
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onResume() {
+        super.onResume();
 
-        unbindService(serviceConnection);
+        if(isMyServiceRunning(MyService_.class)) {
+            Log.d(getClass().getSimpleName(), preferencesHelper.getInt("startMills") + " / " + preferencesHelper.getInt("endMills"));
+
+            setTimeToTimePicker(timepicker_alarm1, preferencesHelper.getInt("startMills"));
+            setTimeToTimePicker(timepicker_alarm2, preferencesHelper.getInt("endMills"));
+            setViewsEnabled(true);
+        }
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
@@ -192,4 +150,13 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    @Override
+    public void onProgressMyService(int millisOfDay) {
+        new Handler(Looper.getMainLooper()).post(() -> tv_time.setText(DateTime.now().withMillisOfDay(millisOfDay).toString(DateTimeFormat.fullDateTime())));
+    }
+
+    @Override
+    public void onStopMyService() {
+        setViewsEnabled(false);
+    }
 }
