@@ -8,17 +8,12 @@ import android.util.Log;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EReceiver;
 
-import io.github.xeyez.notification.persistence.PreferencesHelper;
-
 /**
  * Created by Administrator on 2017-06-02.
  */
 
 @EReceiver
 public class BootReceiver extends BroadcastReceiver {
-
-    @Bean
-    PreferencesHelper preferencesHelper;
 
     @Bean
     AlarmBuilder alarmBuilder;
