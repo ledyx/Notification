@@ -51,7 +51,16 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
     @AfterViews
     void afterViews() {
         //Log.d(getClass().getSimpleName(), preferencesHelper.getInt("startMills") + " / " + preferencesHelper.getInt("endMills"));
-        setViewsEnabled(false);
+
+        if(isMyServiceRunning(MyService_.class)) {
+            Log.d(getClass().getSimpleName(), preferencesHelper.getInt("startMills") + " / " + preferencesHelper.getInt("endMills"));
+
+            setTimeToTimePicker(timepicker_alarm1, preferencesHelper.getInt("startMills"));
+            setTimeToTimePicker(timepicker_alarm2, preferencesHelper.getInt("endMills"));
+            setViewsEnabled(true);
+        }
+        else
+            setViewsEnabled(false);
     }
 
     @Click({R.id.btn_startService, R.id.btn_cancelService})
@@ -118,6 +127,9 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
 
         timepicker_alarm1.setEnabled(!isStart);
         timepicker_alarm2.setEnabled(!isStart);
+
+        if(!isStart)
+            tv_time.setText("time");
     }
 
     @Override
@@ -125,19 +137,6 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
         super.onStart();
 
         MyService.registerListener(getClass(), this);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        if(isMyServiceRunning(MyService_.class)) {
-            Log.d(getClass().getSimpleName(), preferencesHelper.getInt("startMills") + " / " + preferencesHelper.getInt("endMills"));
-
-            setTimeToTimePicker(timepicker_alarm1, preferencesHelper.getInt("startMills"));
-            setTimeToTimePicker(timepicker_alarm2, preferencesHelper.getInt("endMills"));
-            setViewsEnabled(true);
-        }
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
@@ -157,6 +156,6 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
 
     @Override
     public void onStopMyService() {
-        setViewsEnabled(false);
+        new Handler(Looper.getMainLooper()).post(() -> setViewsEnabled(false));
     }
 }

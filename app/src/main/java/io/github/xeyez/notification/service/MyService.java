@@ -32,9 +32,6 @@ public class MyService extends Service {
     private static ConcurrentHashMap<String, OnMyServiceListener> observers = new ConcurrentHashMap<>();
 
     public static void registerListener(Class clazz, OnMyServiceListener onMyServiceListener) {
-        /*if(observers.containsKey(clazz.getName()))
-            return;*/
-
         observers.put(clazz.getName(), onMyServiceListener);
     }
 
@@ -119,12 +116,7 @@ public class MyService extends Service {
                 //notificationManager.notify(777, notification);
                 startForeground(777, notification);
 
-
-
-
                 observers.values().forEach(onMyServiceListener -> onMyServiceListener.onProgressMyService(now.getMillisOfDay()));
-
-
 
                 Thread.sleep(1000);
             }
