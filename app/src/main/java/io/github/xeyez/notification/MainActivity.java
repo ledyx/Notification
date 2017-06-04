@@ -58,6 +58,8 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
             setViewsEnabled(true);
         }
         else {
+            Log.wtf("??", preferencesHelper.getBoolean("isSetAlarm") + " / " + !alaramBuilder.isPassedTime());
+
             if(preferencesHelper.getBoolean("isSetAlarm") && !alaramBuilder.isPassedTime())
                 setViewsEnabled(true);
             else {
