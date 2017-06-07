@@ -1,15 +1,19 @@
 package io.github.xeyez.notification.service;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EService;
+import org.androidannotations.annotations.SystemService;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
@@ -35,17 +39,30 @@ public class MyService extends Service {
         observers.put(clazz.getName(), onMyServiceListener);
     }
 
+    public static void registerListener(Class clazz, Uri notificationSoundUri, OnMyServiceListener onMyServiceListener) {
+        observers.put(clazz.getName(), onMyServiceListener);
+        MyService.notificationSoundUri = notificationSoundUri;
+    }
+
     public static void unregisterListener(Class clazz) {
         if(!observers.containsKey(clazz.getName()))
             return;
 
         observers.remove(clazz.getName());
+        MyService.notificationSoundUri = null;
     }
 
     public static boolean isRegisteredListener(Class clazz) {
         return observers.containsKey(clazz.getName());
     }
 
+    private static final int REQUEST_CODE = 777;
+    private static final String STOP_ACTION = "io.github.xeyez.notification.stop";
+
+    @SystemService
+    NotificationManager notificationManager;
+
+    private static Uri notificationSoundUri;
 
     @Bean
     PreferencesHelper preferencesHelper;
@@ -79,12 +96,20 @@ public class MyService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(getClass().getSimpleName(), "start");
 
-        startMills = preferencesHelper.getInt("startMills");
-        endMills = preferencesHelper.getInt("endMills");
+        if(intent.getAction() != null) {
+            if(intent.getAction().equals(STOP_ACTION)) {
+                onDestroy();
+            }
+        }
+        else {
+            Log.d(getClass().getSimpleName(), "start");
 
-        workInBackground();
+            startMills = preferencesHelper.getInt("startMills");
+            endMills = preferencesHelper.getInt("endMills");
+
+            workInBackground();
+        }
 
         return START_STICKY;
         //return START_REDELIVER_INTENT;
@@ -106,15 +131,25 @@ public class MyService extends Service {
 
                 LocalDateTime now = LocalDateTime.now();
 
-                Notification notification = NotificationUtil.createNotification(getApplicationContext(), pendingIntent, "Clock", now.toString(DateTimeFormat.fullDateTime()), R.drawable.bell);
+                //Notification notification = NotificationUtil.createNotification(getApplicationContext(), pendingIntent, "Clock", now.toString(DateTimeFormat.fullDateTime()), R.drawable.bell);
+                RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notify);
+                remoteViews.setTextViewText(R.id.tv_notify_message, now.toString(DateTimeFormat.fullDateTime()));
+                remoteViews.setOnClickPendingIntent(R.id.btn_notify_exit, PendingIntent.getService(this, REQUEST_CODE, new Intent(STOP_ACTION).setClass(this, getClass()), PendingIntent.FLAG_CANCEL_CURRENT));
+
+                Notification notification = NotificationUtil.createNotification(getApplicationContext(), remoteViews, pendingIntent, R.drawable.bell);
                 notification.flags |= Notification.FLAG_NO_CLEAR;
 
                 /*if(new Random().nextInt(4) == 1) {
-                    notification.defaults = Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE;
+                    notification.defaults = Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS;
+
+                    if(notificationSoundUri != null)
+                        notification.sound = notificationSoundUri;
+                    else
+                        notification.defaults |= Notification.DEFAULT_SOUND;
                 }*/
 
                 //notificationManager.notify(777, notification);
-                startForeground(777, notification);
+                startForeground(REQUEST_CODE, notification);
 
                 observers.values().forEach(onMyServiceListener -> onMyServiceListener.onProgressMyService(now.getMillisOfDay()));
 
@@ -133,6 +168,7 @@ public class MyService extends Service {
 
         running.set(false);
         stopForeground(true);
+        notificationManager.cancel(REQUEST_CODE);
 
         observers.values().forEach(OnMyServiceListener::onStopMyService);
     }

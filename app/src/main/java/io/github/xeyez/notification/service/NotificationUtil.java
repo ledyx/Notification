@@ -6,6 +6,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.support.v4.app.NotificationCompat;
+import android.widget.RemoteViews;
 
 import java.lang.reflect.Method;
 
@@ -25,6 +27,20 @@ public class NotificationUtil {
         return notification;
     }
 
+    public static Notification createNotification(Context context, RemoteViews remoteViews, PendingIntent pendingIntent, int iconId) {
+        try {
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+                    .setSmallIcon(iconId)
+                    .setContent(remoteViews)
+                    .setContentIntent(pendingIntent);
+
+            return builder.build();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
     private static boolean isNotificationBuilderSupported() {
         try {

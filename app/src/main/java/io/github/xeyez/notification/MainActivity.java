@@ -2,6 +2,9 @@ package io.github.xeyez.notification;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -30,11 +33,16 @@ import io.github.xeyez.notification.service.MyService_;
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity implements MyService.OnMyServiceListener {
 
+    public static final int REQUEST_RINGTONE = 123;
+
     @ViewById
     Button btn_startService;
 
     @ViewById
     Button btn_cancelService;
+
+    @ViewById
+    Button btn_ring;
 
     @ViewById
     TextView tv_time;
@@ -47,6 +55,8 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
 
     @Bean
     AlarmBuilder alaramBuilder;
+
+    private Uri notificationSoundUri = null;
 
     @AfterViews
     void afterViews() {
@@ -69,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
         }
     }
 
-    @Click({R.id.btn_startService, R.id.btn_cancelService})
+    @Click({R.id.btn_startService, R.id.btn_cancelService, R.id.btn_ring})
     void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_startService :
@@ -91,6 +101,14 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
 
                 setViewsEnabled(false);
                 preferencesHelper.putBoolean("isSetAlarm", false);
+                break;
+
+            case R.id.btn_ring :
+                Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Tone");
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, notificationSoundUri);
+                startActivityForResult(intent, REQUEST_RINGTONE);
                 break;
         }
     }
@@ -133,9 +151,37 @@ public class MainActivity extends AppCompatActivity implements MyService.OnMySer
         timepicker_alarm1.setEnabled(!isStart);
         timepicker_alarm2.setEnabled(!isStart);
 
+        btn_ring.setEnabled(!isStart);
+
         if(!isStart)
             tv_time.setText("time");
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == REQUEST_RINGTONE && resultCode == RESULT_OK) {
+            Uri uri = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
+            notificationSoundUri = uri;
+
+            MyService.registerListener(getClass(), notificationSoundUri, this);
+
+            String ringToneName = uri != null? RingtoneManager.getRingtone(this, notificationSoundUri).getTitle(this) : "없음";
+            btn_ring.setText(ringToneName);
+
+            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if(Settings.System.canWrite(this)) {
+                    RingtoneManager.setActualDefaultRingtoneUri(this, RingtoneManager.TYPE_NOTIFICATION, uri);
+                }
+                else {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
+                    startActivityForResult(intent, 555);
+                }
+            }*/
+        }
+    }
+
 
     @Override
     protected void onStart() {
