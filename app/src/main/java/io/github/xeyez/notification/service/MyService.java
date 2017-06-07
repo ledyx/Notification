@@ -127,14 +127,11 @@ public class MyService extends Service {
                     break;
                 }
 
-                //Log.d("test", "test");
-
                 LocalDateTime now = LocalDateTime.now();
 
-                //Notification notification = NotificationUtil.createNotification(getApplicationContext(), pendingIntent, "Clock", now.toString(DateTimeFormat.fullDateTime()), R.drawable.bell);
                 RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notify);
                 remoteViews.setTextViewText(R.id.tv_notify_message, now.toString(DateTimeFormat.fullDateTime()));
-                remoteViews.setOnClickPendingIntent(R.id.btn_notify_exit, PendingIntent.getService(this, REQUEST_CODE, new Intent(STOP_ACTION).setClass(this, getClass()), PendingIntent.FLAG_CANCEL_CURRENT));
+                remoteViews.setOnClickPendingIntent(R.id.btn_notify_exit, PendingIntent.getService(this, REQUEST_CODE, new Intent(STOP_ACTION).setClass(this, getClass()), PendingIntent.FLAG_UPDATE_CURRENT));
 
                 Notification notification = NotificationUtil.createNotification(getApplicationContext(), remoteViews, pendingIntent, R.drawable.bell);
                 notification.flags |= Notification.FLAG_NO_CLEAR;
@@ -148,7 +145,7 @@ public class MyService extends Service {
                         notification.defaults |= Notification.DEFAULT_SOUND;
                 }*/
 
-                //notificationManager.notify(777, notification);
+                //notificationManager.notify(REQUEST_CODE, notification);
                 startForeground(REQUEST_CODE, notification);
 
                 observers.values().forEach(onMyServiceListener -> onMyServiceListener.onProgressMyService(now.getMillisOfDay()));
